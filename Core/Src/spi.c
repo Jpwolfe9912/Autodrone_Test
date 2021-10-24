@@ -51,7 +51,7 @@ void SPI1_Init(void) {
 	RCC->APB2ENR |= RCC_APB2ENR_SPI1EN;
 
 	/*		CR1 Initialization	*/
-	SPI1->CR1 |= //SPI_CR1_BR_0 |	// set baudrate (108MHz / 64 = 1.6875 < 7)
+	SPI1->CR1 |= SPI_CR1_BR_0 |	// set baudrate (108MHz / 64 = 1.6875 < 7)
 //			SPI_CR1_BR_1;// |
 			SPI_CR1_BR_2;
 	SPI1->CR1 |= SPI_CR1_CPOL |		// SCK idle state high
