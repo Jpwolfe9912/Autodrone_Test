@@ -8,7 +8,6 @@
 
 extern uint16_t accel_data[3];
 extern uint16_t gyro_data[3];
-extern uint16_t temp;
 
 int main(void){
 	RCC_216MHz_Init();

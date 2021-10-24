@@ -44,7 +44,7 @@ void ICM_AccGyro_Read(void){
 }
 
 void ICM_Init(void){
-	while(!ICM_WHOAMI_Ready()){}				// wait until device ready
+//	while(!ICM_WHOAMI_Ready()){}				// wait until device ready
 
 	ICM_Reset();					// reset device
 	ICM_Wakeup();					// wake out of sleep mode

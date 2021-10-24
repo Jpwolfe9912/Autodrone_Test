@@ -74,7 +74,7 @@ void SPI1_Read(uint8_t *pdata, int size){
 		while(SPI1->SR & SPI_SR_BSY){}		// wait til not busy
 		SPI1->DR = 0;						// send dummy byte
 		while(!(SPI1->SR & SPI_SR_RXNE)){}	// wait until data received
-		*pdata++ = SPI1->DR;				// read int
+		*pdata++ = ((volatile uint8_t*)&SPI1->DR);				// read int
 		size--;
 	}
 }
@@ -83,7 +83,7 @@ void SPI1_Write(uint8_t *pdata, int size){
 	int i = 0;
 	while(i < size){
 		while (!(SPI1->SR & SPI_SR_TXE)){}	// wait until data transmitted
-		SPI1->DR = pdata[i];				// send register to write to
+		*(volatile uint8_t*)&SPI1->DR = pdata[i];				// send register to write to
 		i++;
 	}
 	while(!(SPI1->SR & SPI_SR_TXE)){}		// wait until TX buffer empty
