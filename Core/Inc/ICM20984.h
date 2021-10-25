@@ -12,7 +12,7 @@
 #include "systick_delay.h"
 
 /*		PROTOTYPES		*/
-void ICM_Read(uint8_t reg, uint8_t data, int size);
+void ICM_Read(uint8_t reg, uint8_t *pdata, int size);
 void ICM_Write(uint8_t reg, uint8_t data, int size);
 
 void ICM_AccGyro_Read(void);

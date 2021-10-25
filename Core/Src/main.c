@@ -15,7 +15,11 @@ int main(void){
 	SPI1_Init();
 	ICM_Init();
 
+	uint8_t whoami;
 	while(1){
-		ICM_AccGyro_Read();
+//		ICM_AccGyro_Read();
+//		while(!ICM_WHOAMI_Ready()){}
+		ICM_Read(WHO_AM_I_ICM20948, &whoami, 1);
+		printf("ICM Name is: %X\n", whoami);
 	}
 }

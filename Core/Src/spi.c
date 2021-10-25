@@ -74,21 +74,23 @@ void SPI1_Read(uint8_t *pdata, int size){
 		while(SPI1->SR & SPI_SR_BSY){}		// wait til not busy
 		SPI1->DR = 0;						// send dummy byte
 		while(!(SPI1->SR & SPI_SR_RXNE)){}	// wait until data received
-		*pdata++ = ((volatile uint8_t*)&SPI1->DR);				// read int
+		(*(uint8_t*)pdata++) = *(volatile uint8_t*)SPI1->DR;	// read int
+//		*pdata++ = SPI1->DR;
 		size--;
 	}
 }
 
 void SPI1_Write(uint8_t *pdata, int size){
-	int i = 0;
-	while(i < size){
+	while(size){
 		while (!(SPI1->SR & SPI_SR_TXE)){}	// wait until data transmitted
-		*(volatile uint8_t*)&SPI1->DR = pdata[i];				// send register to write to
-		i++;
+//		*((volatile uint8_t*)SPI1->DR) = *pdata;// send register to write to
+		SPI1->DR = *pdata;
+		pdata += sizeof(uint8_t);
+		size--;
 	}
 	while(!(SPI1->SR & SPI_SR_TXE)){}		// wait until TX buffer empty
 	while(SPI1->SR & SPI_SR_BSY){}			// wait until SPI not in communication
-	uint8_t temp = SPI1->DR;				// clear overrun flag by reading DR and SR
+	volatile uint8_t temp = SPI1->DR;				// clear overrun flag by reading DR and SR
 	temp = SPI1->SR;
 }
 

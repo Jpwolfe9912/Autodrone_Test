@@ -8,17 +8,16 @@
 #include "ICM20984.h"
 #include "spi.h"
 
-uint8_t whoami;
 uint16_t accel_data[3];
 uint16_t gyro_data[3];
 uint16_t temp;
 
 
-void ICM_Read(uint8_t reg, uint8_t data, int size){
+void ICM_Read(uint8_t reg, uint8_t *pdata, int size){
 	reg |= 0x80;				// 8th bit high for a read
 	SPI1->CR1 |= SPI_CR1_SPE;
 	SPI1_Write(&reg, 1);
-	SPI1_Read(&data, size);
+	SPI1_Read(pdata, size);
 	SPI1->CR1 &= ~SPI_CR1_SPE;
 }
 
@@ -58,7 +57,7 @@ void ICM_Init(void){
 
 int ICM_WHOAMI_Ready(void){
 	uint8_t whoami;
-	ICM_Read(WHO_AM_I_ICM20948, whoami, 1);
+	ICM_Read(WHO_AM_I_ICM20948, &whoami, 1);
 	if(whoami == DEVICE_ID){
 		return 1;
 	}
@@ -74,7 +73,7 @@ void ICM_Reset(void){
 
 void ICM_Wakeup(void){
 	uint8_t new_val;
-	ICM_Read(PWR_MGMT_1, new_val, 1);
+	ICM_Read(PWR_MGMT_1, &new_val, 1);
 	new_val &= 0xBF;
 	ICM_Write(PWR_MGMT_1, new_val, 1);
 	delay(100);
@@ -82,7 +81,7 @@ void ICM_Wakeup(void){
 
 void ICM_ClockSource(uint8_t source){
 	uint8_t new_val;
-	ICM_Read(PWR_MGMT_1, new_val, 1);
+	ICM_Read(PWR_MGMT_1, &new_val, 1);
 	new_val |= source;
 	ICM_Write(PWR_MGMT_1, new_val, 1);
 }
@@ -93,7 +92,7 @@ void ICM_ODREnable(void){
 
 void ICM_SPI(void){
 	uint8_t new_val;
-	ICM_Read(USER_CTRL, new_val, 1);
+	ICM_Read(USER_CTRL, &new_val, 1);
 	new_val |= 0x10;
 	ICM_Write(USER_CTRL, new_val, 1);
 }
