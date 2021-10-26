@@ -65,19 +65,23 @@ void SPI1_Init(void) {
 	SPI1->CR2 |= ((8U - 1U) << 8U);	// 8 bit data length
 	SPI1->CR2 &= ~SPI_CR2_FRF;		// motorola format
 	SPI1->CR2 |= SPI_CR2_SSOE;		// NSS output enabled
-
-	SPI1->CR1 |= SPI_CR1_SPE;
+//	SPI1->CR2 |= SPI_CR2_FRXTH;
 }
 
 void SPI1_Read(uint8_t *pdata, int size){
-	while(size){
+//	while(size){
+		while(!(SPI1->SR & ~SPI_SR_FTLVL)){}
 		while(SPI1->SR & SPI_SR_BSY){}		// wait til not busy
 		SPI1->DR = 0;						// send dummy byte
 		while(!(SPI1->SR & SPI_SR_RXNE)){}	// wait until data received
-		(*(uint8_t*)pdata++) = *(volatile uint8_t*)SPI1->DR;	// read int
+//		(*(uint8_t*)pdata++) = *(volatile uint8_t*)SPI1->DR;	// read int
+
+		*pdata = (SPI1->DR >> 8U);	// read int
+		while(!(SPI1->SR & ~SPI_SR_FRLVL)){}
+		SPI1->CR1 &= ~SPI_CR1_SPE;
 //		*pdata++ = SPI1->DR;
-		size--;
-	}
+//		size--;
+//	}
 }
 
 void SPI1_Write(uint8_t *pdata, int size){
@@ -93,4 +97,110 @@ void SPI1_Write(uint8_t *pdata, int size){
 	volatile uint8_t temp = SPI1->DR;				// clear overrun flag by reading DR and SR
 	temp = SPI1->SR;
 }
+
+void SPI1_WriteTest(uint8_t data){
+//	while (!(SPI1->SR & SPI_SR_TXE)){}		// wait until data transmitted
+	SPI1->DR = data;
+	while(!(SPI1->SR & SPI_SR_TXE)){}		// wait until TX buffer empty
+	while(SPI1->SR & SPI_SR_BSY){}			// wait until SPI not in communication
+//	volatile uint8_t temp = SPI1->DR;				// clear overrun flag by reading DR and SR
+//	temp = SPI1->SR;
+}
+
+
+void SPI1_WriteRead(uint8_t TxData, uint8_t *pRxData){
+	SPI1->DR = TxData;
+	while(!(SPI1->SR & SPI_SR_TXE)){}		// wait until TX buffer empty
+	while(SPI1->SR & SPI_SR_BSY){}			// wait until SPI not in communication
+	volatile uint8_t temp = SPI1->DR;				// clear overrun flag by reading DR and SR
+	temp = SPI1->SR;
+
+	while(SPI1->SR & SPI_SR_BSY){}		// wait til not busy
+	SPI1->DR = 0;						// send dummy byte
+	while(!(SPI1->SR & SPI_SR_RXNE)){}
+	while(!(SPI1->SR & SPI_SR_FRLVL)){}
+	*pRxData = SPI1->DR;
+}
+
+
+
+void SPI1_HAL_WriteRead(uint8_t *pTxData, uint8_t *pRxData, uint16_t size){
+	uint32_t txallowed = 1U;
+	uint16_t initTxCount = size;
+	uint16_t initRxCount = size;
+	uint16_t txCount = size;
+	uint16_t rxCount = size;
+
+	uint8_t *pRxBuff = (uint8_t*)pRxData;
+	uint8_t *pTxBuff = (uint8_t*)pTxData;
+
+	if(initRxCount > 1U){
+		SPI1->CR2 &= ~SPI_CR2_FRXTH;			// 16 bit FIFO reception data length
+	}
+	else{
+		SPI1->CR2 |= SPI_CR2_FRXTH;
+	}
+	if((SPI1->CR1 & SPI_CR1_SPE) != SPI_CR1_SPE){
+		SPI1->CR1 |= SPI_CR1_SPE;
+	}
+
+	/*		TX and RX Data in 8 Bit Mode		*/
+	if(initTxCount == 0x01U){
+		if(txCount > 1U){
+//			SPI1->DR = *((uint16_t*)pTxBuff);
+			SPI1->DR = *pTxBuff;
+			pTxBuff += sizeof(uint16_t);
+			txCount -= 2U;
+		}
+		else{
+			*(__IO uint8_t*)SPI1->DR = *pTxBuff;
+			pTxBuff++;
+			txCount--;
+		}
+	}
+	while((txCount > 0U) || (rxCount > 0U)){
+		if(!(SPI1->SR & SPI_SR_TXE) && (txCount > 0U) && (txallowed)){
+			if(txCount > 1U){
+//				SPI1->DR = *((uint16_t*)pTxBuff);
+				SPI1->DR = *pTxBuff;
+				pTxBuff += sizeof(uint16_t);
+				txCount -= 2U;
+			}
+			else{
+				*(__IO uint8_t*)SPI1->DR = *pTxBuff;
+				pTxBuff++;
+				txCount--;
+			}
+			txallowed = 0U;
+		}
+		if(!(SPI1->SR & SPI_SR_RXNE) && (rxCount > 0U)){
+			if(rxCount > 1){
+//				*(uint16_t*)pRxBuff = (uint16_t)SPI1->DR;
+				*pRxBuff = SPI1->DR;
+				pRxBuff += sizeof(uint16_t);
+				pRxBuff -= 2U;
+				if(rxCount <= 1U){
+					SPI1->CR2 |= SPI_CR2_FRXTH;
+				}
+			}
+			else{
+//				(*(uint8_t*)pRxBuff) = *(__IO uint8_t*)SPI1->DR;
+				*pRxBuff = SPI1->DR;
+				pRxBuff++;
+				rxCount--;
+			}
+			txallowed = 1U;
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
+
 

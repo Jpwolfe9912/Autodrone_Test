@@ -15,6 +15,10 @@
 void ICM_Read(uint8_t reg, uint8_t *pdata, int size);
 void ICM_Write(uint8_t reg, uint8_t data, int size);
 
+void ICM_WriteTest(uint8_t data);
+void ICM_WriteRead(uint8_t TxData, uint8_t *pRxData);
+void ICM_HAL_WriteRead(uint8_t *TxData, uint8_t *RxData, uint16_t size);
+
 void ICM_AccGyro_Read(void);
 void ICM_Init(void);
 

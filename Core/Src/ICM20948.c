@@ -29,6 +29,25 @@ void ICM_Write(uint8_t reg, uint8_t data, int size){
 	SPI1->CR1 &= ~SPI_CR1_SPE;
 }
 
+void ICM_WriteTest(uint8_t data){
+	SPI1->CR1 |= SPI_CR1_SPE;
+	SPI1_WriteTest(data);
+	SPI1->CR1 &= ~SPI_CR1_SPE;
+}
+
+void ICM_WriteRead(uint8_t TxData, uint8_t *pRxData){
+	SPI1->CR1 |= SPI_CR1_SPE;
+	SPI1_WriteRead(TxData, pRxData);
+	SPI1->CR1 &= ~SPI_CR1_SPE;
+}
+
+void ICM_HAL_WriteRead(uint8_t *TxData, uint8_t *RxData, uint16_t size){
+	*TxData |= 0x80;
+	SPI1->CR1 |= SPI_CR1_SPE;
+	SPI1_HAL_WriteRead(TxData, RxData, size);
+	SPI1->CR1 &= ~SPI_CR1_SPE;
+}
+
 void ICM_AccGyro_Read(void){
 	uint8_t raw_data[12];
 
